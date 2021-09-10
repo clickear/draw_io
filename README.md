@@ -3,5 +3,4 @@
 # JAVA
 
 ## JVM
-[垃圾回收](./java/jvm/垃圾回收.drawio)
-
+[垃圾回收](./java/jvm/垃圾回收.png)
