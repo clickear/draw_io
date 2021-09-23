@@ -26,6 +26,7 @@
 ## git
 + 基本概念与命令
 + 对象存储模型
++ pack文件
 
 ![git](./tools/git/git.png)
 
