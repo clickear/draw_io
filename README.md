@@ -30,3 +30,8 @@
 
 ![git](./tools/git/git.png)
 
+
+# 代码设计
+## 设计模式
++ 单例模式 
+![sigleton](./base/design/signleton.png)
