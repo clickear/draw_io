@@ -1,0 +1,105 @@
+
+@startuml
+
+
+interface RuleConfigSource {
+  RuleConfig load();
+}
+
+
+
+
+
+interface RuleConfigParser {
+  RuleConfig parse(String configText);
+  RuleConfig parse(InputStream in);
+}
+
+class YamlRuleConfigParser {
+  RuleConfig parse(String configText);
+  RuleConfig parse(InputStream in);
+}
+
+class JsonRuleConfigParser{
+  RuleConfig parse(String configText);
+  RuleConfig parse(InputStream in);
+}
+
+RuleConfigParser <|-- YamlRuleConfigParser
+RuleConfigParser <|-- JsonRuleConfigParser
+
+
+class FileRuleConfigSource {
+
+
+}
+
+interface RateLimiterAlg{
+
+}
+
+class RateLimitRule{
+    ApiLimit getLimitRule(String appId, String api)
+    void addLimitRule(RuleConfig ruleConfig)
+}
+
+
+interface RateLimiterAlg {
+
+  boolean tryAcquire() throws InternalErrorException;
+
+}
+
+class FixedTimeWindowRateLimiter {
+    boolean tryAcquire() throws InternalErrorException;
+}
+
+class DistributedFixedTimeWindowRateLimiter{
+    boolean tryAcquire() throws InternalErrorException;
+}
+
+
+
+RateLimiterAlg <|-- FixedTimeWindowRateLimiter
+RateLimiterAlg <|-- DistributedFixedTimeWindowRateLimiter
+
+
+interface UrlRateLimiter{
+   void limit(String appId, String url)
+}
+
+class MemoryUrlRateLimiter {
+   void limit(String appId, String url)
+}
+
+class DistributedUrlRateLimiter{
+    void limit(String appId, String url)
+}
+
+abstract AbstractUrlRateLimiter{
+
+    - RateLimitRule rateLimitRule
+    - RuleConfigSource ruleConfigSource
+
+    void addLimitRule(RuleConfig ruleConfig)
+}
+
+
+
+UrlRateLimiter <|-- AbstractUrlRateLimiter
+AbstractUrlRateLimiter <|-- MemoryUrlRateLimiter
+AbstractUrlRateLimiter <|-- DistributedUrlRateLimiter
+AbstractUrlRateLimiter --> RateLimitRule : getLimiter
+AbstractUrlRateLimiter --> RateLimiterAlg : createRateLimiterAlg
+
+AbstractUrlRateLimiter --> RuleConfigSource
+RateLimitRule --> RuleConfigSource
+
+
+RuleConfigSource <|-- FileRuleConfigSource
+FileRuleConfigSource --> RuleConfigParser
+
+
+
+
+@enduml

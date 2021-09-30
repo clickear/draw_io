@@ -35,3 +35,8 @@
 ## 设计模式
 + 单例模式 
 ![sigleton](./base/design/signleton.png)
+
+
+## 设计
++ 限流器设计
+![限流器](./base/design/rate_limiter.png)
