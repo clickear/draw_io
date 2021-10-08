@@ -1,0 +1,140 @@
+
+@startuml
+
+
+class RpcClientProxy{
+    <T> T getProxy(Class<T> clazz)
+    Object invoke(Object proxy, Method method, Object[] args)
+}
+note top: 客户端动态代理
+RpcClientProxy --> RpcRequestTransport
+
+
+interface RpcRequestTransport{
+    Object sendRpcRequest(RpcRequest rpcRequest);
+}
+
+RpcRequestTransport <|-- NettyRpcClient
+
+
+
+class NettyRpcClient{
+    Object sendRpcRequest(RpcRequest rpcRequest);
+}
+
+class NettyRpcClientHandler{
+   - UnprocessedRequests unprocessedRequests;
+   - NettyRpcClient nettyRpcClient;
+
+   void channelRead(ChannelHandlerContext ctx, Object msg)
+}
+
+
+
+NettyRpcClient --> RpcMessageEncoder
+NettyRpcClient --> RpcMessageDecoder
+NettyRpcClient --> NettyRpcClientHandler
+
+
+
+RpcMessageEncoder --> Compressor
+RpcMessageEncoder --> Serialization
+
+RpcMessageDecoder --> Compressor
+RpcMessageDecoder --> Serialization
+
+
+ServiceDiscovery --> NettyRpcClient
+
+interface ServiceDiscovery {
+    InetSocketAddress lookupService(RpcRequest rpcRequest);
+}
+
+class ZkServiceDiscoveryImpl{
+    InetSocketAddress lookupService(RpcRequest rpcRequest);
+}
+
+ServiceDiscovery <|-- ZkServiceDiscoveryImpl
+
+
+ZkServiceDiscoveryImpl --> LoadBalance
+
+
+
+' 服务端调用
+
+class NettyRpcServer{
+
+ void start();
+
+ void registerService(RpcServiceConfig rpcServiceConfig): publishService
+
+ + ServiceProvider serviceProvider
+
+}
+
+note top: 服务提供方
+
+NettyRpcServer --> RpcMessageEncoder
+NettyRpcServer --> RpcMessageDecoder
+NettyRpcServer --> NettyRpcServerHandler
+NettyRpcServer --> ServiceProvider
+
+
+class NettyRpcServerHandler{
+    void channelRead(ChannelHandlerContext ctx, Object msg)
+}
+
+
+NettyRpcServerHandler --> RpcRequestHandler
+
+
+class RpcRequestHandler{
+    Object handle(RpcRequest rpcRequest)
+    - Object invokeTargetMethod(RpcRequest rpcRequest, Object service)
+}
+
+RpcRequestHandler --> ServiceProvider
+
+interface ServiceProvider{
+    void addService(RpcServiceConfig rpcServiceConfig);
+
+    Object getService(String rpcServiceName);
+
+    void publishService(RpcServiceConfig rpcServiceConfig);
+}
+
+
+ServiceProvider <|-- ZkServiceProviderImpl
+
+
+'其它辅助类
+
+interface Serialization {
+   <T> byte[] serialize(T obj) throws IOException;
+   <T> T deserialize(byte[] data, Class<T> clz) throws IOException;
+}
+
+Serialization <|-- HessianSerialization
+Serialization <|-- ProtostuffSerializer
+Serialization <|-- KyroSerializer
+
+interface Compressor {
+    byte[] compress(byte[] array) throws IOException;
+    byte[] unCompress(byte[] array) throws IOException;
+}
+
+Compressor <|-- GzipCompressor
+Compressor <|-- SnappyCompressor
+
+
+' 负载均衡
+interface LoadBalance {
+    String selectServiceAddress(List<String> serviceAddresses, RpcRequest rpcRequest);
+}
+
+LoadBalance <|-- ConsistentHashLoadBalance
+LoadBalance <|-- RandomLoadBalance
+
+
+@enduml
